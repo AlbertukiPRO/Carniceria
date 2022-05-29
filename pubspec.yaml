@@ -37,6 +37,9 @@ dependencies:
   fluent_ui: ^3.10.0
   http: ^0.13.4
   image_cacheing: ^0.0.2
+  motion_toast: ^2.1.6
+  provider: ^6.0.3
+  flutter_phoenix: ^1.0.0
 
 dev_dependencies:
   flutter_test:

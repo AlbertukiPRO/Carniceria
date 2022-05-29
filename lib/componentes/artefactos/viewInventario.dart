@@ -1,14 +1,18 @@
 import 'dart:ui';
 
-import 'package:carniceria/componentes/contenPages/pageInventario.dart';
 import 'package:carniceria/componentes/variables.dart';
+import 'package:carniceria/providers/CarritoCompras.dart';
 import 'package:carniceria/services/models/Cortes.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_cacheing/image_cacheing.dart';
+import 'package:provider/provider.dart';
+
+import '../../services/models/ProductoModelo.dart';
 
 class ViewInventario extends StatefulWidget {
   final List<Cortes>? lista;
+
   ViewInventario({this.lista, Key? key}) : super(key: key);
 
   @override
@@ -20,13 +24,13 @@ class _ViewInventarioState extends State<ViewInventario> {
 
   bool _checked = false;
 
-  viewToast(context) {
+  viewToast(context, String sms, String title) {
     showDialog(
         context: context,
         builder: (context) {
           return ContentDialog(
-            title: const Text('Upps !!'),
-            content: const Text('No pudimos borrar tu corte verifica el error'),
+            title: Text(title),
+            content: Text(sms),
             actions: [
               FilledButton(
                 child: const Text('Cerrar'),
@@ -37,8 +41,8 @@ class _ViewInventarioState extends State<ViewInventario> {
         });
   }
 
-  modalUpdate(context, String idCorte, String nombreCorte, String descip, String precio, String url){
-
+  modalUpdate(context, String idCorte, String nombreCorte, String descip,
+      String precio, String url) {
     List<String> cortes = [];
 
     final controllerNombre = TextEditingController();
@@ -57,14 +61,8 @@ class _ViewInventarioState extends State<ViewInventario> {
           return ContentDialog(
             title: const Text('Modifica los datos necesarios'),
             content: Container(
-              width: MediaQuery
-                  .of(context)
-                  .size
-                  .width * 0.5,
-              height: MediaQuery
-                  .of(context)
-                  .size
-                  .height * 0.6,
+              width: MediaQuery.of(context).size.width * 0.5,
+              height: MediaQuery.of(context).size.height * 0.6,
               child: Column(
                 children: [
                   const Text(
@@ -141,7 +139,9 @@ class _ViewInventarioState extends State<ViewInventario> {
         "&precioCorte=" +
         datosCorte[2] +
         "&imgCorte=" +
-        datosCorte[3] + "&idCorte="+datosCorte[4]));
+        datosCorte[3] +
+        "&idCorte=" +
+        datosCorte[4]));
 
     if (resultado.statusCode == 200) {
       return true;
@@ -150,28 +150,34 @@ class _ViewInventarioState extends State<ViewInventario> {
     }
   }
 
-  deleteCorte(String idCorte) async {
+  deleteCorte(String idCorte, context) async {
     var cliente = http.Client();
 
-    var resultado = await cliente.get(Uri.parse(
-        urls[3] +
-            "?id=" +idCorte));
+    var resultado = await cliente.get(Uri.parse(urls[3] + "?id=" + idCorte));
 
     print(resultado.body);
     if (resultado.body == "1") {
       setState(() {
+        Provider.of<UserData>(context, listen: false).refresh = true;
       });
     } else {
-      viewToast(context);
+      viewToast(
+          context, 'No pudimos borrar tu corte verifica el error', "Ups !!");
     }
+    Phoenix.rebirth(context);
+  }
+
+  addProducto(context, idProducto, nombreProducto, precio, urlIMG) {
+    Provider.of<UserData>(context, listen: false).addProduc(int.parse(idProducto), nombreProducto, double.parse(precio), urlIMG);
+    Provider.of<UserData>(context, listen: false).sumaTotal += double.parse(precio);
+    print(Provider.of<UserData>(context, listen: false).sumaTotal.toString()+" + " + precio);
   }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
+      return ListView.builder(
         itemCount: widget.lista!.length,
         itemBuilder: (context, int index) {
-          int id = int.parse(widget.lista![index].idCorte!);
           return Container(
             width: double.infinity,
             padding: const EdgeInsets.all(5),
@@ -214,6 +220,15 @@ class _ViewInventarioState extends State<ViewInventario> {
                             style: const TextStyle(fontSize: 15)),
                       ],
                     ),
+                    OutlinedButton(
+                      child: const Text('Agregar'),
+                      onPressed: () => addProducto(
+                          context,
+                          widget.lista![index].idCorte,
+                          widget.lista![index].nombreCorte,
+                          widget.lista![index].precioCorte,
+                          widget.lista![index].imgCorte),
+                    ),
                     Text(
                       '\$ ${widget.lista![index].precioCorte!}',
                       style: TextStyle(
@@ -222,14 +237,13 @@ class _ViewInventarioState extends State<ViewInventario> {
                     Row(
                       children: [
                         FilledButton(
-                          child: const Icon(
-                            FluentIcons.delete,
-                            color: Colors.white,
-                          ),
-                          onPressed: ()  {
-                            deleteCorte(widget.lista![index].idCorte!);
-                          }
-                        ),
+                            child: const Icon(
+                              FluentIcons.delete,
+                              color: Colors.white,
+                            ),
+                            onPressed: () {
+                              deleteCorte(widget.lista![index].idCorte!, context);
+                            }),
                         const SizedBox(
                           width: 25,
                         ),
@@ -237,7 +251,13 @@ class _ViewInventarioState extends State<ViewInventario> {
                           child: const Icon(FluentIcons.update_restore,
                               color: Colors.white),
                           onPressed: () {
-                            modalUpdate(context, widget.lista![index].idCorte!, widget.lista![index].nombreCorte!, widget.lista![index].descripcionCorte!, widget.lista![index].precioCorte!, widget.lista![index].imgCorte!);
+                            modalUpdate(
+                                context,
+                                widget.lista![index].idCorte!,
+                                widget.lista![index].nombreCorte!,
+                                widget.lista![index].descripcionCorte!,
+                                widget.lista![index].precioCorte!,
+                                widget.lista![index].imgCorte!);
                           },
                         ),
                       ],

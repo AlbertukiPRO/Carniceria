@@ -1,7 +1,9 @@
 import 'package:carniceria/componentes/artefactos/viewInventario.dart';
+import 'package:carniceria/providers/CarritoCompras.dart';
 import 'package:carniceria/services/models/Cortes.dart';
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import '../../services/obtenerCortes.dart';
 

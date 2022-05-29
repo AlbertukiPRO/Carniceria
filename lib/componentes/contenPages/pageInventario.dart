@@ -1,9 +1,11 @@
 import 'package:carniceria/componentes/artefactos/buildInventario.dart';
 import 'package:carniceria/componentes/variables.dart';
+import 'package:carniceria/main.dart';
+import 'package:carniceria/providers/CarritoCompras.dart';
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:http/http.dart' as http;
-
-import '../../main.dart';
+import 'package:provider/provider.dart';
 
 class PageInventario extends StatefulWidget {
   const PageInventario({Key? key}) : super(key: key);
@@ -46,8 +48,8 @@ class _PageInventarioState extends State<PageInventario> {
           return ContentDialog(
             title: const Text('Nuevo Corte'),
             content: Container(
-              width: MediaQuery.of(context).size.width*0.5,
-              height: MediaQuery.of(context).size.height*0.6,
+              width: MediaQuery.of(context).size.width * 0.5,
+              height: MediaQuery.of(context).size.height * 0.6,
               child: Column(
                 children: [
                   const Text(
@@ -102,9 +104,7 @@ class _PageInventarioState extends State<PageInventario> {
                   if (res) {
                     Navigator.pop(context);
                   }
-                  setState(() {
-
-                  });
+                  setState(() {});
                 },
               ),
               FilledButton(
@@ -125,14 +125,34 @@ class _PageInventarioState extends State<PageInventario> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "Inventario",
-                style: TextStyle(fontSize: 30),
+              Row(
+                children: [
+                  const Text(
+                    "Inventario",
+                    style: TextStyle(fontSize: 30),
+                  ),
+                  SizedBox(width: 30,),
+                  OutlinedButton(
+                      child: const Icon(FluentIcons.refresh),
+                      onPressed: () => Phoenix.rebirth(context),
+                  ),
+                ],
               ),
-              FilledButton(
-                child: const Text('Agregar corte'),
-                onPressed: () => Modal(context),
-              ),
+              Row(
+                children: [
+                  FilledButton(
+                    child: const Text('Agregar corte'),
+                    onPressed: () => Modal(context),
+                  ),
+                  const SizedBox(
+                    width: 50,
+                  ),
+                  OutlinedButton(
+                      child: Text(
+                          'Saldo: \$ ${Provider.of<UserData>(context).saldo}'),
+                      onPressed: () => print('saldo')),
+                ],
+              )
             ],
           ),
         ),
@@ -150,8 +170,13 @@ class _PageInventarioState extends State<PageInventario> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
-              children:  [
-                Row(children: [Text('ID '),Icon(FluentIcons.number_field,color: Colors.green)],),
+              children: [
+                Row(
+                  children: [
+                    Text('ID '),
+                    Icon(FluentIcons.number_field, color: Colors.green)
+                  ],
+                ),
                 const Text('Imagen'),
                 const Text('Nombre Corte'),
                 const Text('Description corte'),
